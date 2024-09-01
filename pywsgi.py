@@ -103,6 +103,10 @@ def playlist(provider, country_code):
     stations, token, err = providers[provider].channels(country_code)
     if err is not None: return err, 500
 
+    # Debug print to view all data for each channel
+    for station in stations:
+        print(station)
+
     # Filter out Hidden items or items without Hidden Attribute
     tmsid_stations = []
     no_tmsid_stations = []
@@ -116,7 +120,6 @@ def playlist(provider, country_code):
         data_group = no_tmsid_stations
     else:
         data_group = stations
-
 
     stations = sorted(stations, key = lambda i: i.get('name', ''))
 
@@ -183,7 +186,7 @@ def playlist_mjh_compatible(provider, country_code):
         m3u += f"#EXTINF:-1 channel-id=\"{provider}-{s.get('id')}\""
         m3u += f" tvg-id=\"{s.get('id')}\""
         m3u += f" tvg-chno=\"{s.get('number')}\"" if s.get('number') else ""
-        # m3u += f" group-title=\"{''.join(map(str, s.get('group', [])))}\"" if s.get('group') else ""
+        m3u += f" group-title=\"{''.join(map(str, s.get('group', [])))}\"" if s.get('group') else ""
         m3u += f" tvg-logo=\"{''.join(map(str, s.get('logo', [])))}\"" if s.get('logo') else ""
         m3u += f" tvg-name=\"{s.get('call_sign')}\"" if s.get('call_sign') else ""
         if gracenote == 'include':
