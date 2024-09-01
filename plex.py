@@ -134,7 +134,7 @@ class Client:
 
         plex_tmsid_url = "https://raw.githubusercontent.com/jgomez177/plex-for-channels/main/plex_tmsid.csv"
         plex_custom_tmsid = 'plex_data/plex_custom_tmsid.csv'
-        genre_csv_path = 'data/channels-list-country-GB-genre-all.csv'  # Path to your CSV file
+        genre_csv_path = 'channels-list-country-GB-genre-all.csv'  # Path to your CSV file
 
         if country_code in self.x_forward.keys():
             self.headers.update(self.x_forward.get(country_code))
