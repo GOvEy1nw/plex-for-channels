@@ -4,6 +4,23 @@ from datetime import datetime, timedelta
 # from io import StringIO
 import xml.etree.ElementTree as ET
 
+def load_channel_genres(csv_file_path):
+    channel_genres = {}
+    try:
+        with open(csv_file_path, mode='r') as file:
+            reader = csv.DictReader(file, delimiter=';', fieldnames=['Title', 'Genre', 'Language', 'Summary', 'Link'])
+            next(reader)  # Skip the header row
+            for row in reader:
+                print(row)  # Debug print to check the rows
+                channel_id = row['Title']
+                genre = row['Genre']
+                channel_genres[channel_id] = genre
+    except FileNotFoundError:
+        print(f"Error: File {csv_file_path} not found.")
+    except KeyError as e:
+        print(f"Error: Missing expected column in CSV file: {e}")
+    return channel_genres
+
 class Client:
     def __init__(self):
 
@@ -111,12 +128,13 @@ class Client:
         print(f"New token for {country_code} generated at {(self.sessionAt.get(country_code)).strftime('%Y-%m-%d %H:%M.%S %z')}")
         return token, None
 
-    def channels(self, country_code = "local"):
+    def channels(self, country_code = "uk"):
         token, error = self.token(country_code)
         if error: return None, token, error
 
         plex_tmsid_url = "https://raw.githubusercontent.com/jgomez177/plex-for-channels/main/plex_tmsid.csv"
         plex_custom_tmsid = 'plex_data/plex_custom_tmsid.csv'
+        genre_csv_path = 'data/channels-list-country-GB-genre-all.csv'  # Path to your CSV file
 
         if country_code in self.x_forward.keys():
             self.headers.update(self.x_forward.get(country_code))
@@ -126,7 +144,9 @@ class Client:
 
         self.stations = []
 
-        # print (len(resp))
+        # Load channel genres
+        channel_genres = load_channel_genres(genre_csv_path)
+
         channels = resp.get("MediaContainer").get("Channel")
 
         for elem in channels:
@@ -135,7 +155,8 @@ class Client:
             slug = elem.get('slug')
             title = elem.get('title')
             id = elem.get('id')
-            # Accessing all key values inside the Media/Part arrays
+            genre = channel_genres.get(title, '')  # Get genre from the mapping using title
+
             key_values = [part["key"] for media in elem["Media"] for part in media["Part"]]
 
             match len(key_values):
@@ -148,10 +169,8 @@ class Client:
                     plex_key = key_values[0]
 
             try:
-                # Check if any Media has drm set to True and return a note
                 has_drm = any(media["drm"] for media in elem["Media"])
             except KeyError as e:
-                # print(f"Error: Missing 'drm' key in at least one Media item in {slug}. {e}")
                 has_drm = False
 
             if has_drm:
@@ -159,11 +178,12 @@ class Client:
                 print(note)
             else:
                 self.stations.append({'call_sign': callSign,
-                                      'slug': slug,
-                                      'name': title,
-                                      'logo': logo,
-                                      'id': id,
-                                      'key': plex_key
+                                    'slug': slug,
+                                    'name': title,
+                                    'logo': logo,
+                                    'id': id,
+                                    'key': plex_key,
+                                    'genre': genre  # Add genre to station data
                                     })
                 
         tmsid_dict = {}

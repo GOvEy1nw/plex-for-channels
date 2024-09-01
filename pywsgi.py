@@ -18,11 +18,11 @@ else:
     except:
         port = 7777
 
-plex_country_code = os.environ.get("PLEX_CODE")
+plex_country_code = 'uk'
 if plex_country_code:
    plex_country_list = plex_country_code.split(',')
 else:
-   plex_country_list = ['local']
+   plex_country_list = ['uk']
 
 
 ALLOWED_COUNTRY_CODES = ['us_east', 'us_west', 'local', 'ca', 'uk', 'nz', 'au', 'mx', 'es']
@@ -130,7 +130,7 @@ def playlist(provider, country_code):
         m3u += f"#EXTINF:-1 channel-id=\"{provider}-{s.get('slug')}\""
         m3u += f" tvg-id=\"{s.get('id')}\""
         m3u += f" tvg-chno=\"{''.join(map(str, s.get('number', [])))}\"" if s.get('number') else ""
-        m3u += f" group-title=\"{''.join(map(str, s.get('group', [])))}\"" if s.get('group') else ""
+        m3u += f" group-title=\"{s.get('genre')}\"" if s.get('genre') else ""
         m3u += f" tvg-logo=\"{''.join(map(str, s.get('logo', [])))}\"" if s.get('logo') else ""
         m3u += f" tvg-name=\"{s.get('call_sign')}\"" if s.get('call_sign') else ""
         if gracenote == 'include':
@@ -138,9 +138,8 @@ def playlist(provider, country_code):
             m3u += f" tvc-guide-stationid=\"{s.get('tmsid')}\"" if s.get('tmsid') else ""
         m3u += f",{s.get('name') or s.get('call_sign')}\n"
         m3u += f"https://epg.provider.plex.tv{s.get('key')}?X-Plex-Token={token}\n\n"
-
     response = Response(m3u, content_type='audio/x-mpegurl')
-    return (response)
+    return response
 
 @app.get("/<provider>/<country_code>/channels.json")
 def channels_json(provider, country_code):
